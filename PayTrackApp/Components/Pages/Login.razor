@@ -1,0 +1,78 @@
+﻿@page "/"
+
+@inject NavigationManager Navigation
+
+<h3>Login Page</h3>
+
+<div class="login-container">
+    <form id="loginForm" @onsubmit="HandleLogin">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" @bind="Username" placeholder="Enter Username" required />
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" @bind="Password" placeholder="Enter Password" required />
+        </div>
+
+        <button type="submit" class="btn-submit">Login</button>
+    </form>
+</div>
+
+<style>
+    .login-container {
+        max-width: 400px;
+        margin: 20px auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    .btn-submit {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px 15px;
+        cursor: pointer;
+        border-radius: 4px;
+        width: 100%;
+        margin-top: 10px;
+    }
+
+        .btn-submit:hover {
+            background-color: #0056b3;
+        }
+</style>
+
+@code {
+    private string Username { get; set; }
+    private string Password { get; set; }
+
+    private void HandleLogin()
+    {
+        // After the user clicks login, navigate to dashboard
+        Navigation.NavigateTo("/dashboard");
+    }
+}

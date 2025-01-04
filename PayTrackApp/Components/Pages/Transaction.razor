@@ -1,0 +1,227 @@
+﻿@page "/transactions"
+
+<style>
+    .transaction-list {
+        margin-top: 20px;
+    }
+
+    .transaction-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+        .transaction-item.income {
+            background-color: #d4edda; /* Light green */
+        }
+
+        .transaction-item.expense {
+            background-color: #f8d7da; /* Light red */
+        }
+
+        .transaction-item.debt {
+            background-color: #fff3cd; /* Light yellow */
+        }
+
+    .transaction-header {
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 2px solid #ccc;
+    }
+
+    .total-section {
+        margin-top: 20px;
+    }
+
+    .total {
+        font-weight: bold;
+    }
+</style>
+
+<div class="container mt-4">
+    <h3>Manage Transactions</h3>
+
+    <div class="d-flex justify-content-end mb-3">
+        <button class="btn btn-primary" @onclick="OpenModal">Add Transaction</button>
+    </div>
+
+    <!-- Total Inflows, Outflows, and Debts Section -->
+    <div class="total-section">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="total">
+                    <h5>Total Inflows: @totalInflows.ToString("0.00")</h5>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="total">
+                    <h5>Total Outflows: @totalOutflows.ToString("0.00")</h5>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="total">
+                    <h5>Total Debts: @totalDebts.ToString("0.00")</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction List -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5>All Transactions</h5>
+                    <div class="transaction-list">
+                        @if (transactions != null && transactions.Any())
+                        {
+                            <div class="transaction-header">
+                                <span>Item</span>
+                                <span>Date</span>
+                                <span>Money</span>
+                                <span>Note</span>
+                                <span>Type</span>
+                            </div>
+
+                            @foreach (var transaction in transactions)
+                            {
+                                <div class="transaction-item @(transaction.Type == "Income" ? "income" : transaction.Type == "Expense" ? "expense" : "debt")">
+                                    <span>@transaction.Description</span>
+                                    <span>@transaction.Date.ToString("yyyy-MM-dd")</span>
+                                    <span>@transaction.Amount.ToString("0.00")</span>
+                                    <span>@transaction.Note</span>
+                                    <span>@transaction.Type</span>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p>No transactions to display.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (showModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Transaction</h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label>Description</label>
+                        <input type="text" class="form-control" @bind="newTransaction.Description" />
+                    </div>
+                    <div class="mb-3">
+                        <label>Date</label>
+                        <input type="date" class="form-control" @bind="newTransaction.Date" />
+                    </div>
+                    <div class="mb-3">
+                        <label>Amount</label>
+                        <input type="number" class="form-control" @bind="newTransaction.Amount" />
+                    </div>
+                    <div class="mb-3">
+                        <label>Type</label>
+                        <select class="form-control" @bind="newTransaction.Type">
+                            <option value=""></option>
+                            <option value="Income">Income</option>
+                            <option value="Expense">Expense</option>
+                            <option value="Debt">Debt</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>Note</label>
+                        <input type="text" class="form-control" @bind="newTransaction.Note" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">Close</button>
+                    <button type="button" class="btn btn-primary" @onclick="AddTransaction">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    private List<TransactionModel> transactions = new List<TransactionModel>();
+    private TransactionModel newTransaction = new TransactionModel();
+    private bool showModal = false;
+
+    // Variables for total inflows, outflows, and debts
+    private decimal totalInflows = 0;
+    private decimal totalOutflows = 0;
+    private decimal totalDebts = 0;
+
+    // TransactionModel class with properties
+    public class TransactionModel
+    {
+        public string Description { get; set; }
+        public DateTime Date { get; set; }
+        public decimal Amount { get; set; }
+        public string Type { get; set; } // Income, Expense, Debt
+        public string Note { get; set; } // Optional note for each transaction
+    }
+
+    // Open modal to add new transaction
+    private void OpenModal()
+    {
+        newTransaction = new TransactionModel();
+        newTransaction.Date = DateTime.Now;
+        showModal = true;
+    }
+
+    // Close the modal
+    private void CloseModal()
+    {
+        showModal = false;
+    }
+
+    // Add new transaction to the list
+    private void AddTransaction()
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(newTransaction.Description) && newTransaction.Amount > 0 && !string.IsNullOrWhiteSpace(newTransaction.Type))
+            {
+                transactions.Add(newTransaction);
+
+                // Update totals based on the transaction type
+                if (newTransaction.Type == "Income")
+                    totalInflows += newTransaction.Amount;
+                else if (newTransaction.Type == "Expense")
+                    totalOutflows += newTransaction.Amount;
+                else if (newTransaction.Type == "Debt")
+                    totalDebts += newTransaction.Amount;
+
+                ClearForm();
+            }
+            else
+            {
+                Console.WriteLine("Invalid input. Please fill in all required fields.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error while adding transaction: {ex.Message}");
+        }
+    }
+
+    // Clear form after adding transaction
+    private void ClearForm()
+    {
+        newTransaction = new TransactionModel();
+        showModal = false;
+    }
+}
